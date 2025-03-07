@@ -270,13 +270,24 @@ export function RecurringManagement({
 
   return (
     <div className="space-y-8">
-      <Card className="p-6 shadow-md">
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <Card className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex flex-wrap md:flex-nowrap gap-4">
-            <div className="w-full">
-              <Label htmlFor="type">Type</Label>
+            <div className="w-full md:w-1/3">
+              <Label htmlFor="name">Name *</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter name"
+                required
+              />
+            </div>
+
+            <div className="w-full md:w-1/4">
+              <Label htmlFor="type">Type *</Label>
               <Select value={type} onValueChange={(value: "subscription" | "recurring") => setType(value)}>
-                <SelectTrigger>
+                <SelectTrigger id="type">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -286,18 +297,7 @@ export function RecurringManagement({
               </Select>
             </div>
 
-            <div className="w-full">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={type === "subscription" ? "Netflix, Spotify, etc." : "Rent, Insurance, etc."}
-                required
-              />
-            </div>
-
-            <div className="w-full">
+            <div className="w-full md:w-1/4">
               <Label htmlFor="amount">Amount</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2">{currencySymbol}</span>
@@ -308,32 +308,16 @@ export function RecurringManagement({
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   className="pl-7"
+                  placeholder="0.00"
                   required
                 />
               </div>
             </div>
 
-            <div className="w-full">
-              <Label htmlFor="category">Category</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(cat => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="w-full">
-              <Label htmlFor="frequency">Frequency</Label>
-              <Select 
-                value={frequency} 
-                onValueChange={(value: "monthly" | "yearly" | "weekly") => setFrequency(value)}
-              >
-                <SelectTrigger>
+            <div className="w-full md:w-1/4">
+              <Label htmlFor="frequency">Frequency *</Label>
+              <Select value={frequency} onValueChange={(value: "monthly" | "yearly" | "weekly") => setFrequency(value)}>
+                <SelectTrigger id="frequency">
                   <SelectValue placeholder="Select frequency" />
                 </SelectTrigger>
                 <SelectContent>
@@ -346,16 +330,27 @@ export function RecurringManagement({
           </div>
 
           <div className="flex flex-wrap md:flex-nowrap gap-4">
-            <div className="w-full">
-              <Label>Start Date</Label>
+            <div className="w-full md:w-1/4">
+              <Label htmlFor="category">Category *</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="w-full md:w-1/4">
+              <Label>Start Date *</Label>
               <Popover open={openStartCalendar} onOpenChange={setOpenStartCalendar}>
                 <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start text-left font-normal"
-                  >
+                  <Button variant="outline" className="w-full justify-start">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formatDate(startDate)}
+                    {startDate ? formatDate(startDate) : "Select date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -372,44 +367,35 @@ export function RecurringManagement({
               </Popover>
             </div>
 
-            <div className="w-full">
-              <Label>End Date (Optional)</Label>
+            <div className="w-full md:w-1/4">
+              <Label>End Date</Label>
               <Popover open={openEndCalendar} onOpenChange={setOpenEndCalendar}>
                 <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start text-left font-normal"
-                  >
+                  <Button variant="outline" className="w-full justify-start">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? formatDate(endDate) : "No end date"}
+                    {endDate ? formatDate(endDate) : "Select date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
                     selected={endDate}
-                    onSelect={setEndDate}
+                    onSelect={(date) => {
+                      setEndDate(date)
+                      setOpenEndCalendar(false)
+                    }}
+                    disabled={(date) => date < startDate}
                     initialFocus
                   />
                 </PopoverContent>
               </Popover>
             </div>
-
-            <div className="w-full">
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Input
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Add notes..."
-              />
-            </div>
           </div>
 
           {type === "subscription" ? (
             <div className="flex flex-wrap md:flex-nowrap gap-4">
-              <div className="w-full">
-                <Label htmlFor="serviceUrl">Service URL (Optional)</Label>
+              <div className="w-full md:w-1/3">
+                <Label htmlFor="serviceUrl">Service URL</Label>
                 <Input
                   id="serviceUrl"
                   type="url"
@@ -419,8 +405,8 @@ export function RecurringManagement({
                 />
               </div>
 
-              <div className="w-full">
-                <Label htmlFor="cancelUrl">Cancellation URL (Optional)</Label>
+              <div className="w-full md:w-1/3">
+                <Label htmlFor="cancelUrl">Cancellation URL</Label>
                 <Input
                   id="cancelUrl"
                   type="url"
@@ -430,8 +416,8 @@ export function RecurringManagement({
                 />
               </div>
 
-              <div className="w-full">
-                <Label htmlFor="reminderDays">Remind Days Before</Label>
+              <div className="w-full md:w-1/3">
+                <Label htmlFor="reminderDays">Remind Days Before *</Label>
                 <Input
                   id="reminderDays"
                   type="number"
@@ -443,7 +429,7 @@ export function RecurringManagement({
             </div>
           ) : (
             <div className="w-full">
-              <Label htmlFor="recipient">Recipient (Optional)</Label>
+              <Label htmlFor="recipient">Recipient</Label>
               <Input
                 id="recipient"
                 value={recipient}
@@ -452,6 +438,16 @@ export function RecurringManagement({
               />
             </div>
           )}
+
+          <div className="w-full">
+            <Label htmlFor="description">Description</Label>
+            <Input
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Add notes..."
+            />
+          </div>
 
           <Button type="submit" className="w-full md:w-auto">
             Add {type === "subscription" ? "Subscription" : "Recurring Payment"}

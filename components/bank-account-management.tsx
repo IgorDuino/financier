@@ -117,7 +117,7 @@ export function BankAccountManagement({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8"
+                className="h-8 w-8 hover:text-destructive"
                 onClick={() => onDeleteAccount(account.id)}
               >
                 <Trash2 className="h-4 w-4" />
@@ -143,17 +143,17 @@ export function BankAccountManagement({
       </div>
 
       <Tabs defaultValue="transfer" className="w-full">
-        <TabsList>
+        <TabsList className="w-full justify-start">
           <TabsTrigger value="transfer">Transfer Money</TabsTrigger>
           <TabsTrigger value="new-account">New Account</TabsTrigger>
         </TabsList>
 
         <TabsContent value="transfer">
           <Card className="p-6">
-            <form onSubmit={handleTransferSubmit} className="space-y-4">
+            <form onSubmit={handleTransferSubmit} className="space-y-6">
               <div className="flex flex-wrap md:flex-nowrap gap-4">
                 <div className="w-full md:w-1/3">
-                  <Label>From Account</Label>
+                  <Label>From Account *</Label>
                   <Select value={fromAccountId} onValueChange={setFromAccountId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select account" />
@@ -173,7 +173,7 @@ export function BankAccountManagement({
                 </div>
 
                 <div className="w-full md:w-1/3">
-                  <Label>To Account</Label>
+                  <Label>To Account *</Label>
                   <Select value={toAccountId} onValueChange={setToAccountId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select account" />
@@ -191,7 +191,7 @@ export function BankAccountManagement({
                 </div>
 
                 <div className="w-full md:w-1/4">
-                  <Label>Amount</Label>
+                  <Label>Amount *</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2">{currencySymbol}</span>
                     <Input
@@ -201,6 +201,7 @@ export function BankAccountManagement({
                       value={transferAmount}
                       onChange={(e) => setTransferAmount(e.target.value)}
                       className="pl-7"
+                      required
                     />
                   </div>
                 </div>
@@ -208,7 +209,7 @@ export function BankAccountManagement({
 
               <div className="flex flex-wrap md:flex-nowrap gap-4">
                 <div className="w-full md:w-1/4">
-                  <Label>Date</Label>
+                  <Label>Date *</Label>
                   <Popover open={openCalendar} onOpenChange={setOpenCalendar}>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-full justify-start">
@@ -231,7 +232,7 @@ export function BankAccountManagement({
                 </div>
 
                 <div className="w-full md:flex-1">
-                  <Label>Description (Optional)</Label>
+                  <Label>Description</Label>
                   <Input
                     placeholder="Add notes..."
                     value={transferDescription}
@@ -282,10 +283,10 @@ export function BankAccountManagement({
 
         <TabsContent value="new-account">
           <Card className="p-6">
-            <form onSubmit={handleAccountSubmit} className="space-y-4">
+            <form onSubmit={handleAccountSubmit} className="space-y-6">
               <div className="flex flex-wrap md:flex-nowrap gap-4">
                 <div className="w-full md:w-1/3">
-                  <Label>Account Name</Label>
+                  <Label>Account Name *</Label>
                   <Input
                     placeholder="Enter account name"
                     value={accountName}
@@ -295,7 +296,7 @@ export function BankAccountManagement({
                 </div>
 
                 <div className="w-full md:w-1/4">
-                  <Label>Account Type</Label>
+                  <Label>Account Type *</Label>
                   <Select value={accountType} onValueChange={(value: BankAccount["type"]) => setAccountType(value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
@@ -311,7 +312,7 @@ export function BankAccountManagement({
                 </div>
 
                 <div className="w-full md:w-1/4">
-                  <Label>Initial Balance</Label>
+                  <Label>Initial Balance *</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2">{currencySymbol}</span>
                     <Input
@@ -345,7 +346,7 @@ export function BankAccountManagement({
               </div>
 
               <div className="w-full">
-                <Label>Description (Optional)</Label>
+                <Label>Description</Label>
                 <Input
                   placeholder="Add notes..."
                   value={accountDescription}

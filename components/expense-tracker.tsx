@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ExpenseForm } from "@/components/expense-form"
 import { ExpenseTable } from "@/components/expense-table"
@@ -97,8 +98,13 @@ export type Transfer = {
   description?: string
 }
 
-export default function ExpenseTracker() {
-  const [activeTab, setActiveTab] = useState("expenses")
+type ExpenseTrackerProps = {
+  initialTab: string
+}
+
+export default function ExpenseTracker({ initialTab }: ExpenseTrackerProps) {
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [expenses, setExpenses] = useState<Expense[]>([
     {
       id: "1",
@@ -398,6 +404,16 @@ export default function ExpenseTracker() {
     setTransfers([...transfers, newTransfer])
   }
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    router.push(`/?tab=${value}`, { scroll: false })
+  }
+
+  // Update active tab when URL changes
+  useEffect(() => {
+    setActiveTab(initialTab)
+  }, [initialTab])
+
   return (
     <div className="flex flex-col items-center space-y-8">
       <div className="w-full max-w-4xl">
@@ -410,9 +426,9 @@ export default function ExpenseTracker() {
         </div>
         
         <div className="flex items-center mb-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="flex items-center">
-              <TabsList>
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+            <div className="flex items-center mb-6">
+              <TabsList className="w-full justify-start">
                 <TabsTrigger value="expenses">Expenses</TabsTrigger>
                 <TabsTrigger value="income">Income</TabsTrigger>
                 <TabsTrigger value="accounts">Accounts</TabsTrigger>
