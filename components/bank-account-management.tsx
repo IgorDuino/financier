@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { CalendarIcon, Plus, ArrowRight, Trash2 } from "lucide-react"
+import { CalendarIcon, ArrowRight, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,7 +18,6 @@ type BankAccountManagementProps = {
   accounts: BankAccount[]
   transfers: Transfer[]
   onAddAccount: (account: Omit<BankAccount, "id">) => void
-  onUpdateAccount: (id: string, updates: Partial<BankAccount>) => void
   onDeleteAccount: (id: string) => void
   onAddTransfer: (transfer: Omit<Transfer, "id">) => void
   currencySymbol: string
@@ -36,7 +35,6 @@ export function BankAccountManagement({
   accounts,
   transfers,
   onAddAccount,
-  onUpdateAccount,
   onDeleteAccount,
   onAddTransfer,
   currencySymbol

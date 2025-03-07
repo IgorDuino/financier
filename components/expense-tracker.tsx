@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ExpenseForm } from "@/components/expense-form"
 import { ExpenseTable } from "@/components/expense-table"
@@ -98,13 +98,12 @@ export type Transfer = {
   description?: string
 }
 
-type ExpenseTrackerProps = {
-  initialTab: string
+interface ExpenseTrackerProps {
+  activeTab: string
 }
 
-export default function ExpenseTracker({ initialTab }: ExpenseTrackerProps) {
+export function ExpenseTracker({ activeTab }: ExpenseTrackerProps) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState(initialTab)
   const [expenses, setExpenses] = useState<Expense[]>([
     {
       id: "1",
@@ -405,14 +404,8 @@ export default function ExpenseTracker({ initialTab }: ExpenseTrackerProps) {
   }
 
   const handleTabChange = (value: string) => {
-    setActiveTab(value)
     router.push(`/?tab=${value}`, { scroll: false })
   }
-
-  // Update active tab when URL changes
-  useEffect(() => {
-    setActiveTab(initialTab)
-  }, [initialTab])
 
   return (
     <div className="flex flex-col items-center space-y-8">
@@ -427,80 +420,118 @@ export default function ExpenseTracker({ initialTab }: ExpenseTrackerProps) {
         
         <div className="flex items-center mb-6">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <div className="flex items-center mb-6">
-              <TabsList className="w-full justify-start">
-                <TabsTrigger value="expenses">Expenses</TabsTrigger>
-                <TabsTrigger value="income">Income</TabsTrigger>
-                <TabsTrigger value="accounts">Accounts</TabsTrigger>
-                <TabsTrigger value="loans">Loans</TabsTrigger>
-                <TabsTrigger value="recurring">Recurring</TabsTrigger>
-              </TabsList>
-            </div>
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="expenses">Expenses</TabsTrigger>
+              <TabsTrigger value="income">Income</TabsTrigger>
+              <TabsTrigger value="accounts">Accounts</TabsTrigger>
+              <TabsTrigger value="loans">Loans</TabsTrigger>
+              <TabsTrigger value="recurring">Recurring</TabsTrigger>
+            </TabsList>
 
             <TabsContent value="expenses" className="w-full">
-              <ExpenseForm 
-                onAddExpense={addExpense} 
-                currencySymbol={currency.symbol}
-                accounts={bankAccounts}
-              />
-              <div className="mt-8">
-                <ExpenseFilters
-                  dateRange={dateRange}
-                  onDateRangeChange={setDateRange}
-                  selectedMonth={selectedMonth}
-                  onMonthChange={setSelectedMonth}
-                />
-                <ExpenseTable 
-                  expenses={filteredExpenses} 
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold tracking-tight">Expenses</h2>
+                  <p className="text-muted-foreground">
+                    Track and manage your expenses here.
+                  </p>
+                </div>
+                <ExpenseForm 
+                  onAddExpense={addExpense} 
                   currencySymbol={currency.symbol}
-                  onExpenseClick={handleExpenseClick}
                   accounts={bankAccounts}
                 />
+                <div className="mt-8">
+                  <ExpenseFilters
+                    dateRange={dateRange}
+                    onDateRangeChange={setDateRange}
+                    selectedMonth={selectedMonth}
+                    onMonthChange={setSelectedMonth}
+                  />
+                  <ExpenseTable 
+                    expenses={filteredExpenses} 
+                    currencySymbol={currency.symbol}
+                    onExpenseClick={handleExpenseClick}
+                    accounts={bankAccounts}
+                  />
+                </div>
               </div>
             </TabsContent>
 
             <TabsContent value="income" className="w-full">
-              <IncomeForm onAddIncome={addIncome} currencySymbol={currency.symbol} />
-              <div className="mt-8">
-                <IncomeView
-                  incomes={incomes}
-                  monthlySalary={monthlySalary}
-                  onUpdateSalary={setMonthlySalary}
-                  currencySymbol={currency.symbol}
-                  onIncomeClick={handleIncomeClick}
-                />
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold tracking-tight">Income</h2>
+                  <p className="text-muted-foreground">
+                    Track and manage your income here.
+                  </p>
+                </div>
+                <IncomeForm onAddIncome={addIncome} currencySymbol={currency.symbol} />
+                <div className="mt-8">
+                  <IncomeView
+                    incomes={incomes}
+                    monthlySalary={monthlySalary}
+                    onUpdateSalary={setMonthlySalary}
+                    currencySymbol={currency.symbol}
+                    onIncomeClick={handleIncomeClick}
+                  />
+                </div>
               </div>
             </TabsContent>
 
             <TabsContent value="accounts" className="w-full">
-              <BankAccountManagement
-                accounts={bankAccounts}
-                transfers={transfers}
-                onAddAccount={addBankAccount}
-                onUpdateAccount={updateBankAccount}
-                onDeleteAccount={deleteBankAccount}
-                onAddTransfer={addTransfer}
-                currencySymbol={currency.symbol}
-              />
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold tracking-tight">Accounts</h2>
+                  <p className="text-muted-foreground">
+                    Manage your bank accounts and balances.
+                  </p>
+                </div>
+                <BankAccountManagement
+                  accounts={bankAccounts}
+                  transfers={transfers}
+                  onAddAccount={addBankAccount}
+                  onUpdateAccount={updateBankAccount}
+                  onDeleteAccount={deleteBankAccount}
+                  onAddTransfer={addTransfer}
+                  currencySymbol={currency.symbol}
+                />
+              </div>
             </TabsContent>
 
             <TabsContent value="loans" className="w-full">
-              <LoanManagement
-                loans={loans}
-                onAddLoan={addLoan}
-                onUpdateLoanStatus={updateLoanStatus}
-                currencySymbol={currency.symbol}
-              />
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold tracking-tight">Loans</h2>
+                  <p className="text-muted-foreground">
+                    Track your loans and payments.
+                  </p>
+                </div>
+                <LoanManagement
+                  loans={loans}
+                  onAddLoan={addLoan}
+                  onUpdateLoanStatus={updateLoanStatus}
+                  currencySymbol={currency.symbol}
+                />
+              </div>
             </TabsContent>
 
             <TabsContent value="recurring" className="w-full">
-              <RecurringManagement
-                items={recurringItems}
-                onAddItem={addRecurringItem}
-                onUpdateItem={updateRecurringItem}
-                onDeleteItem={deleteRecurringItem}
-                currencySymbol={currency.symbol}
-              />
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold tracking-tight">Recurring</h2>
+                  <p className="text-muted-foreground">
+                    Manage your recurring transactions.
+                  </p>
+                </div>
+                <RecurringManagement
+                  items={recurringItems}
+                  onAddItem={addRecurringItem}
+                  onUpdateItem={updateRecurringItem}
+                  onDeleteItem={deleteRecurringItem}
+                  currencySymbol={currency.symbol}
+                />
+              </div>
             </TabsContent>
           </Tabs>
         </div>
