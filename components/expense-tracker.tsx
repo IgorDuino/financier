@@ -223,18 +223,33 @@ export default function ExpenseTracker() {
   }
 
   const addRecurringItem = (item: Omit<RecurringItem, "id">) => {
-    const newItem = {
-      ...item,
-      id: Math.random().toString(36).substring(2, 9),
-    }
-    setRecurringItems([...recurringItems, newItem])
+    const id = Math.random().toString(36).substring(2, 9)
+    
+    const newItem: RecurringItem = item.type === "subscription"
+      ? {
+          ...item,
+          id,
+          type: "subscription",
+          reminderDays: (item as Omit<Subscription, "id">).reminderDays,
+          serviceUrl: (item as Omit<Subscription, "id">).serviceUrl,
+          cancelUrl: (item as Omit<Subscription, "id">).cancelUrl,
+        }
+      : {
+          ...item,
+          id,
+          type: "recurring",
+          recipient: (item as Omit<RecurringPayment, "id">).recipient,
+        }
+
+    setRecurringItems(prevItems => [...prevItems, newItem])
   }
 
   const updateRecurringItem = (id: string, updates: Partial<RecurringItem>) => {
     setRecurringItems(items => 
-      items.map(item => 
-        item.id === id ? { ...item, ...updates } : item
-      )
+      items.map(item => {
+        if (item.id !== id) return item
+        return { ...item, ...updates } as RecurringItem
+      })
     )
   }
 

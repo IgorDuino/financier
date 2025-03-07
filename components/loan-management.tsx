@@ -9,7 +9,6 @@ import { Card } from "@/components/ui/card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { Loan } from "@/components/expense-tracker"
 
@@ -250,7 +249,7 @@ export function LoanManagement({
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground border rounded-md">
-              You haven't borrowed any money.
+              You haven&apos;t borrowed any money.
             </div>
           )}
         </div>

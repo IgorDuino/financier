@@ -11,7 +11,6 @@ import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import {
   DropdownMenu,
@@ -88,16 +87,16 @@ export function RecurringManagement({
       onAddItem({
         ...baseItem,
         type: "subscription",
+        reminderDays: Number.parseInt(reminderDays),
         serviceUrl: serviceUrl || undefined,
         cancelUrl: cancelUrl || undefined,
-        reminderDays: Number.parseInt(reminderDays),
-      })
+      } as Omit<Subscription, "id">)
     } else {
       onAddItem({
         ...baseItem,
         type: "recurring",
         recipient: recipient || undefined,
-      })
+      } as Omit<RecurringPayment, "id">)
     }
 
     // Reset form
@@ -169,7 +168,7 @@ export function RecurringManagement({
   }
 
   const filteredAndSortedSubscriptions = useMemo(() => {
-    let filtered = subscriptions
+    const filtered = subscriptions
       .filter(sub => {
         if (searchQuery) {
           return (
@@ -202,7 +201,7 @@ export function RecurringManagement({
   }, [subscriptions, searchQuery, filterCategory, sortField, sortDirection])
 
   const filteredAndSortedRecurring = useMemo(() => {
-    let filtered = recurringPayments
+    const filtered = recurringPayments
       .filter(payment => {
         if (searchQuery) {
           return (
@@ -493,13 +492,15 @@ export function RecurringManagement({
       {/* Filter and Search Bar */}
       <div className="flex flex-wrap gap-4 items-center">
         <div className="flex-1 min-w-[200px]">
-          <Input
-            placeholder="Search by name, category, or recipient..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-            leftIcon={<Search className="h-4 w-4" />}
-          />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, category, or recipient..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9"
+            />
+          </div>
         </div>
         
         <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value)}>
