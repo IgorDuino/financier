@@ -11,6 +11,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { CurrencySelector } from "@/components/currency-selector"
 import { TransactionDetail } from "@/components/transaction-detail"
 import { LoanManagement } from "@/components/loan-management"
+import { RecurringManagement } from "@/components/recurring-management"
 
 export type Expense = {
   id: string
@@ -47,6 +48,34 @@ export type Loan = {
   description?: string
   status: "active" | "paid" | "overdue"
 }
+
+export type RecurringPaymentBase = {
+  id: string
+  name: string
+  amount: number
+  frequency: "monthly" | "yearly" | "weekly"
+  category: string
+  startDate: Date
+  endDate?: Date
+  description?: string
+  lastPaymentDate?: Date
+  nextPaymentDate: Date
+  isActive: boolean
+}
+
+export type Subscription = RecurringPaymentBase & {
+  type: "subscription"
+  serviceUrl?: string
+  cancelUrl?: string
+  reminderDays: number // days before to remind about renewal
+}
+
+export type RecurringPayment = RecurringPaymentBase & {
+  type: "recurring"
+  recipient?: string
+}
+
+export type RecurringItem = Subscription | RecurringPayment
 
 export default function ExpenseTracker() {
   const [activeTab, setActiveTab] = useState("expenses")
@@ -124,6 +153,37 @@ export default function ExpenseTracker() {
     }
   ])
 
+  const [recurringItems, setRecurringItems] = useState<RecurringItem[]>([
+    {
+      id: "1",
+      type: "subscription",
+      name: "Netflix",
+      amount: 999,
+      frequency: "monthly",
+      category: "Entertainment",
+      startDate: new Date(2023, 0, 1),
+      nextPaymentDate: new Date(2024, 3, 1),
+      lastPaymentDate: new Date(2024, 2, 1),
+      serviceUrl: "https://netflix.com/account",
+      cancelUrl: "https://netflix.com/cancel",
+      reminderDays: 3,
+      isActive: true
+    },
+    {
+      id: "2",
+      type: "recurring",
+      name: "Rent",
+      amount: 50000,
+      frequency: "monthly",
+      category: "Housing",
+      startDate: new Date(2023, 0, 1),
+      nextPaymentDate: new Date(2024, 3, 1),
+      lastPaymentDate: new Date(2024, 2, 1),
+      recipient: "Landlord Name",
+      isActive: true
+    }
+  ])
+
   const [monthlySalary, setMonthlySalary] = useState(3500)
   const [currency, setCurrency] = useState<Currency>({ code: "RUB", symbol: "₽", name: "Russian Ruble" })
   
@@ -160,6 +220,26 @@ export default function ExpenseTracker() {
       id: Math.random().toString(36).substring(2, 9),
     }
     setLoans([...loans, newLoan])
+  }
+
+  const addRecurringItem = (item: Omit<RecurringItem, "id">) => {
+    const newItem = {
+      ...item,
+      id: Math.random().toString(36).substring(2, 9),
+    }
+    setRecurringItems([...recurringItems, newItem])
+  }
+
+  const updateRecurringItem = (id: string, updates: Partial<RecurringItem>) => {
+    setRecurringItems(items => 
+      items.map(item => 
+        item.id === id ? { ...item, ...updates } : item
+      )
+    )
+  }
+
+  const deleteRecurringItem = (id: string) => {
+    setRecurringItems(items => items.filter(item => item.id !== id))
   }
 
   const handleExpenseClick = (expense: Expense) => {
@@ -220,6 +300,7 @@ export default function ExpenseTracker() {
                 <TabsTrigger value="expenses">Expenses</TabsTrigger>
                 <TabsTrigger value="income">Income</TabsTrigger>
                 <TabsTrigger value="loans">Loans</TabsTrigger>
+                <TabsTrigger value="recurring">Recurring</TabsTrigger>
               </TabsList>
             </div>
 
@@ -258,6 +339,16 @@ export default function ExpenseTracker() {
                 loans={loans}
                 onAddLoan={addLoan}
                 onUpdateLoanStatus={updateLoanStatus}
+                currencySymbol={currency.symbol}
+              />
+            </TabsContent>
+
+            <TabsContent value="recurring" className="w-full">
+              <RecurringManagement
+                items={recurringItems}
+                onAddItem={addRecurringItem}
+                onUpdateItem={updateRecurringItem}
+                onDeleteItem={deleteRecurringItem}
                 currencySymbol={currency.symbol}
               />
             </TabsContent>

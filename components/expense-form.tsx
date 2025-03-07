@@ -156,7 +156,7 @@ export function ExpenseForm({ onAddExpense, currencySymbol }: ExpenseFormProps) 
           </label>
           <Input
             id="description"
-            placeholder="Description"
+            placeholder="Description" 
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full"
