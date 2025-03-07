@@ -12,6 +12,7 @@ import { CurrencySelector } from "@/components/currency-selector"
 import { TransactionDetail } from "@/components/transaction-detail"
 import { LoanManagement } from "@/components/loan-management"
 import { RecurringManagement } from "@/components/recurring-management"
+import { BankAccountManagement } from "./bank-account-management"
 
 export type Expense = {
   id: string
@@ -19,6 +20,7 @@ export type Expense = {
   category: string
   date: Date
   description?: string
+  accountId: string
 }
 
 export type Income = {
@@ -77,6 +79,24 @@ export type RecurringPayment = RecurringPaymentBase & {
 
 export type RecurringItem = Subscription | RecurringPayment
 
+export type BankAccount = {
+  id: string
+  name: string
+  type: "cash" | "credit" | "debit" | "savings" | "investment"
+  balance: number
+  creditLimit?: number
+  description?: string
+}
+
+export type Transfer = {
+  id: string
+  fromAccountId: string
+  toAccountId: string
+  amount: number
+  date: Date
+  description?: string
+}
+
 export default function ExpenseTracker() {
   const [activeTab, setActiveTab] = useState("expenses")
   const [expenses, setExpenses] = useState<Expense[]>([
@@ -86,6 +106,7 @@ export default function ExpenseTracker() {
       category: "Groceries",
       date: new Date(2023, 5, 15),
       description: "Weekly shopping",
+      accountId: "2" // Main Debit Card
     },
     {
       id: "2",
@@ -93,6 +114,7 @@ export default function ExpenseTracker() {
       category: "Entertainment",
       date: new Date(2023, 5, 18),
       description: "Movie ticket",
+      accountId: "1" // Cash
     },
     {
       id: "3",
@@ -100,6 +122,7 @@ export default function ExpenseTracker() {
       category: "Utilities",
       date: new Date(2023, 5, 20),
       description: "Internet bill",
+      accountId: "3" // Credit Card
     },
   ])
 
@@ -198,12 +221,48 @@ export default function ExpenseTracker() {
 
   const [selectedMonth, setSelectedMonth] = useState<string | undefined>(undefined)
 
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([
+    {
+      id: "1",
+      name: "Cash",
+      type: "cash",
+      balance: 5000,
+      description: "Physical cash"
+    },
+    {
+      id: "2",
+      name: "Main Debit Card",
+      type: "debit",
+      balance: 15000,
+      description: "Primary bank account"
+    },
+    {
+      id: "3",
+      name: "Credit Card",
+      type: "credit",
+      balance: -2000,
+      creditLimit: 50000,
+      description: "Main credit card"
+    }
+  ])
+
+  const [transfers, setTransfers] = useState<Transfer[]>([])
+
   const addExpense = (expense: Omit<Expense, "id">) => {
     const newExpense = {
       ...expense,
       id: Math.random().toString(36).substring(2, 9),
     }
     setExpenses([...expenses, newExpense])
+
+    // Update account balance
+    setBankAccounts(accounts =>
+      accounts.map(account =>
+        account.id === expense.accountId
+          ? { ...account, balance: account.balance - expense.amount }
+          : account
+      )
+    )
   }
 
   const addIncome = (income: Omit<Income, "id">) => {
@@ -297,6 +356,48 @@ export default function ExpenseTracker() {
     ))
   }
 
+  const addBankAccount = (account: Omit<BankAccount, "id">) => {
+    const newAccount = {
+      ...account,
+      id: Math.random().toString(36).substring(2, 9),
+    }
+    setBankAccounts([...bankAccounts, newAccount])
+  }
+
+  const updateBankAccount = (id: string, updates: Partial<BankAccount>) => {
+    setBankAccounts(accounts => 
+      accounts.map(account => 
+        account.id === id ? { ...account, ...updates } : account
+      )
+    )
+  }
+
+  const deleteBankAccount = (id: string) => {
+    setBankAccounts(accounts => accounts.filter(account => account.id !== id))
+  }
+
+  const addTransfer = (transfer: Omit<Transfer, "id">) => {
+    const newTransfer = {
+      ...transfer,
+      id: Math.random().toString(36).substring(2, 9),
+    }
+    
+    // Update account balances
+    setBankAccounts(accounts => 
+      accounts.map(account => {
+        if (account.id === transfer.fromAccountId) {
+          return { ...account, balance: account.balance - transfer.amount }
+        }
+        if (account.id === transfer.toAccountId) {
+          return { ...account, balance: account.balance + transfer.amount }
+        }
+        return account
+      })
+    )
+    
+    setTransfers([...transfers, newTransfer])
+  }
+
   return (
     <div className="flex flex-col items-center space-y-8">
       <div className="w-full max-w-4xl">
@@ -314,13 +415,18 @@ export default function ExpenseTracker() {
               <TabsList>
                 <TabsTrigger value="expenses">Expenses</TabsTrigger>
                 <TabsTrigger value="income">Income</TabsTrigger>
+                <TabsTrigger value="accounts">Accounts</TabsTrigger>
                 <TabsTrigger value="loans">Loans</TabsTrigger>
                 <TabsTrigger value="recurring">Recurring</TabsTrigger>
               </TabsList>
             </div>
 
             <TabsContent value="expenses" className="w-full">
-              <ExpenseForm onAddExpense={addExpense} currencySymbol={currency.symbol} />
+              <ExpenseForm 
+                onAddExpense={addExpense} 
+                currencySymbol={currency.symbol}
+                accounts={bankAccounts}
+              />
               <div className="mt-8">
                 <ExpenseFilters
                   dateRange={dateRange}
@@ -332,6 +438,7 @@ export default function ExpenseTracker() {
                   expenses={filteredExpenses} 
                   currencySymbol={currency.symbol}
                   onExpenseClick={handleExpenseClick}
+                  accounts={bankAccounts}
                 />
               </div>
             </TabsContent>
@@ -347,6 +454,18 @@ export default function ExpenseTracker() {
                   onIncomeClick={handleIncomeClick}
                 />
               </div>
+            </TabsContent>
+
+            <TabsContent value="accounts" className="w-full">
+              <BankAccountManagement
+                accounts={bankAccounts}
+                transfers={transfers}
+                onAddAccount={addBankAccount}
+                onUpdateAccount={updateBankAccount}
+                onDeleteAccount={deleteBankAccount}
+                onAddTransfer={addTransfer}
+                currencySymbol={currency.symbol}
+              />
             </TabsContent>
 
             <TabsContent value="loans" className="w-full">
@@ -378,6 +497,7 @@ export default function ExpenseTracker() {
           onClose={handleCloseTransactionDetail}
           type={transactionType}
           currencySymbol={currency.symbol}
+          accounts={bankAccounts}
         />
       )}
     </div>

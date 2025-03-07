@@ -1,14 +1,7 @@
 "use client"
 
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogDescription
-} from "@/components/ui/dialog"
-import { Card, CardContent } from "@/components/ui/card"
-import type { Expense, Income } from "@/components/expense-tracker"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import type { Expense, Income, BankAccount } from "@/components/expense-tracker"
 
 type TransactionDetailProps = {
   transaction: Expense | Income
@@ -16,91 +9,88 @@ type TransactionDetailProps = {
   onClose: () => void
   type: "expense" | "income"
   currencySymbol: string
+  accounts: BankAccount[]
 }
 
 export function TransactionDetail({ 
   transaction, 
   isOpen, 
   onClose, 
-  type,
-  currencySymbol
+  type, 
+  currencySymbol,
+  accounts
 }: TransactionDetailProps) {
-  function formatDate(date: Date | undefined): string {
-    if (!date) return "Not specified";
-    const options: Intl.DateTimeFormatOptions = { 
-      year: "numeric", 
-      month: "long", 
-      day: "numeric",
-      weekday: "long"
-    }
+  function formatDate(date: Date): string {
+    const options: Intl.DateTimeFormatOptions = { year: "numeric", month: "short", day: "numeric" }
     return date.toLocaleDateString("en-US", options)
   }
 
-  const isIncome = type === "income"
-  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {isIncome ? "Income" : "Expense"} Details
-          </DialogTitle>
-          <DialogDescription>
-            View details for this {isIncome ? "income" : "expense"} transaction.
-          </DialogDescription>
+          <DialogTitle>Transaction Details</DialogTitle>
         </DialogHeader>
-        
-        <div className="grid gap-4 py-4">
-          <Card>
-            <CardContent className="pt-6">
-              <dl className="grid grid-cols-[1fr_2fr] gap-y-4">
-                <dt className="font-medium text-muted-foreground">
-                  {isIncome ? "Source" : "Category"}:
-                </dt>
-                <dd>
-                  {isIncome 
-                    ? (transaction as Income).source 
-                    : (transaction as Expense).category}
-                </dd>
-                
-                <dt className="font-medium text-muted-foreground">Amount:</dt>
-                <dd className="font-semibold">
-                  {currencySymbol}{transaction.amount.toFixed(2)}
-                </dd>
-                
-                {isIncome && (
-                  <>
-                    <dt className="font-medium text-muted-foreground">Frequency:</dt>
-                    <dd>
-                      {(transaction as Income).frequency.charAt(0).toUpperCase() + 
-                       (transaction as Income).frequency.slice(1)}
-                    </dd>
-                    
-                    {(transaction as Income).frequency !== "one-time" && (
-                      <>
-                        <dt className="font-medium text-muted-foreground">Period:</dt>
-                        <dd>
-                          {formatDate((transaction as Income).startDate || transaction.date)}
-                          {(transaction as Income).endDate ? 
-                            ` to ${formatDate((transaction as Income).endDate)}` : 
-                            " (ongoing)"}
-                        </dd>
-                      </>
-                    )}
-                  </>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Type</p>
+              <p className="font-medium capitalize">{type}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Amount</p>
+              <p className="font-medium">{currencySymbol}{transaction.amount.toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Date</p>
+              <p className="font-medium">{formatDate(transaction.date)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">
+                {type === "expense" ? "Category" : "Source"}
+              </p>
+              <p className="font-medium">
+                {type === "expense" 
+                  ? (transaction as Expense).category
+                  : (transaction as Income).source
+                }
+              </p>
+            </div>
+            {type === "expense" && (
+              <div>
+                <p className="text-sm text-muted-foreground">Account</p>
+                <p className="font-medium">
+                  {accounts.find(a => a.id === (transaction as Expense).accountId)?.name || "Unknown Account"}
+                </p>
+              </div>
+            )}
+            {type === "income" && (transaction as Income).frequency !== "one-time" && (
+              <>
+                <div>
+                  <p className="text-sm text-muted-foreground">Frequency</p>
+                  <p className="font-medium capitalize">{(transaction as Income).frequency}</p>
+                </div>
+                {(transaction as Income).startDate && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Start Date</p>
+                    <p className="font-medium">{formatDate((transaction as Income).startDate!)}</p>
+                  </div>
                 )}
-                
-                <dt className="font-medium text-muted-foreground">Date:</dt>
-                <dd>{formatDate(transaction.date)}</dd>
-                
-                <dt className="font-medium text-muted-foreground">Description:</dt>
-                <dd>{transaction.description || "-"}</dd>
-                
-                <dt className="font-medium text-muted-foreground">Transaction ID:</dt>
-                <dd className="text-xs text-muted-foreground">{transaction.id}</dd>
-              </dl>
-            </CardContent>
-          </Card>
+                {(transaction as Income).endDate && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">End Date</p>
+                    <p className="font-medium">{formatDate((transaction as Income).endDate!)}</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          {transaction.description && (
+            <div>
+              <p className="text-sm text-muted-foreground">Description</p>
+              <p className="font-medium">{transaction.description}</p>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

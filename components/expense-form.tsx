@@ -12,11 +12,13 @@ import { Card } from "@/components/ui/card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import type { Expense } from "@/components/expense-tracker"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { Expense, BankAccount } from "@/components/expense-tracker"
 
 type ExpenseFormProps = {
   onAddExpense: (expense: Omit<Expense, "id">) => void
   currencySymbol: string
+  accounts: BankAccount[]
 }
 
 const categories = [
@@ -35,24 +37,26 @@ const categories = [
   "Miscellaneous",
 ]
 
-export function ExpenseForm({ onAddExpense, currencySymbol }: ExpenseFormProps) {
+export function ExpenseForm({ onAddExpense, currencySymbol, accounts }: ExpenseFormProps) {
   const [amount, setAmount] = useState("")
   const [category, setCategory] = useState("")
   const [date, setDate] = useState<Date>(new Date())
   const [description, setDescription] = useState("")
+  const [accountId, setAccountId] = useState("")
   const [openCategory, setOpenCategory] = useState(false)
   const [openCalendar, setOpenCalendar] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!amount || !category || !date) return
+    if (!amount || !category || !date || !accountId) return
 
     onAddExpense({
       amount: Number.parseFloat(amount),
       category,
       date,
       description: description || undefined,
+      accountId,
     })
 
     // Reset form
@@ -60,6 +64,7 @@ export function ExpenseForm({ onAddExpense, currencySymbol }: ExpenseFormProps) 
     setCategory("")
     setDate(new Date())
     setDescription("")
+    setAccountId("")
   }
 
   function formatDate(date: Date): string {
@@ -99,7 +104,7 @@ export function ExpenseForm({ onAddExpense, currencySymbol }: ExpenseFormProps) 
                 {category || "Select category..."}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
+            <PopoverContent className="w-auto p-0">
               <Command>
                 <CommandInput placeholder="Search category..." />
                 <CommandList>
@@ -122,6 +127,24 @@ export function ExpenseForm({ onAddExpense, currencySymbol }: ExpenseFormProps) 
               </Command>
             </PopoverContent>
           </Popover>
+        </div>
+
+        <div className="w-full md:w-1/4">
+          <label htmlFor="account" className="block text-sm font-medium mb-1">
+            Account
+          </label>
+          <Select value={accountId} onValueChange={setAccountId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select account" />
+            </SelectTrigger>
+            <SelectContent>
+              {accounts.map((account) => (
+                <SelectItem key={account.id} value={account.id}>
+                  {account.name} ({currencySymbol}{account.balance.toFixed(2)})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="w-full md:w-auto">
