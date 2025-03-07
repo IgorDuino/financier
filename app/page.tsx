@@ -10,9 +10,13 @@ export default function Home({ searchParams }: Props) {
 
   return (
     <main className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-8 text-center">Financial Tracker</h1>
+      <h1 className="text-3xl font-bold mb-8 text-center">Financer</h1>
       <ExpenseTracker initialTab={activeTab} />
     </main>
   )
+}
+
+export const metadata = {
+  title: "Financer - Personal Finance Manager",
 }
 
