@@ -102,6 +102,16 @@ interface ExpenseTrackerProps {
   activeTab: string
 }
 
+interface BankAccountManagementProps {
+  accounts: BankAccount[];
+  transfers: Transfer[];
+  onAddAccount: (account: Omit<BankAccount, "id">) => void;
+  onUpdateAccount: (id: string, updates: Partial<BankAccount>) => void;
+  onDeleteAccount: (id: string) => void;
+  onAddTransfer: (transfer: Omit<Transfer, "id">) => void;
+  currencySymbol: string;
+}
+
 export function ExpenseTracker({ activeTab }: ExpenseTrackerProps) {
   const router = useRouter()
   const [expenses, setExpenses] = useState<Expense[]>([

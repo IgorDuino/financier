@@ -10,12 +10,13 @@ export const metadata = {
 }
 
 type Props = {
-  searchParams?: { tab?: string }
+  searchParams?: Promise<{ tab?: string }>
 }
 
-export default async function Home({ searchParams }: Props) {
-  const cookieStore = cookies()
-  
+export default async function Home(props: Props) {
+  const searchParams = await props.searchParams;
+  const cookieStore = await cookies()
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -27,7 +28,7 @@ export default async function Home({ searchParams }: Props) {
       },
     }
   )
-  
+
   const {
     data: { session },
   } = await supabase.auth.getSession()

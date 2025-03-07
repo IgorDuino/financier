@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { CalendarIcon, ArrowRight, Trash2 } from "lucide-react"
+import { CalendarIcon, ArrowRight, Trash2, Pencil } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,11 +13,21 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { BankAccount, Transfer } from "@/components/expense-tracker"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 type BankAccountManagementProps = {
   accounts: BankAccount[]
   transfers: Transfer[]
   onAddAccount: (account: Omit<BankAccount, "id">) => void
+  onUpdateAccount: (id: string, updates: Partial<BankAccount>) => void
   onDeleteAccount: (id: string) => void
   onAddTransfer: (transfer: Omit<Transfer, "id">) => void
   currencySymbol: string
@@ -35,6 +45,7 @@ export function BankAccountManagement({
   accounts,
   transfers,
   onAddAccount,
+  onUpdateAccount,
   onDeleteAccount,
   onAddTransfer,
   currencySymbol
@@ -53,6 +64,14 @@ export function BankAccountManagement({
   const [transferDate, setTransferDate] = useState<Date>(new Date())
   const [transferDescription, setTransferDescription] = useState("")
   const [openCalendar, setOpenCalendar] = useState(false)
+
+  // State for editing account
+  const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
+  const [editingAccountName, setEditingAccountName] = useState("");
+  const [editingAccountType, setEditingAccountType] = useState<BankAccount["type"]>("debit");
+  const [editingAccountBalance, setEditingAccountBalance] = useState("");
+  const [editingCreditLimit, setEditingCreditLimit] = useState("");
+  const [editingAccountDescription, setEditingAccountDescription] = useState("");
 
   const handleAccountSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -101,6 +120,36 @@ export function BankAccountManagement({
     return date.toLocaleDateString("en-US", options)
   }
 
+  // --- EDITING FUNCTIONS ---
+
+  const handleEditAccount = (account: BankAccount) => {
+    setEditingAccountId(account.id);
+    setEditingAccountName(account.name);
+    setEditingAccountType(account.type);
+    setEditingAccountBalance(account.balance.toFixed(2));
+    setEditingCreditLimit(account.creditLimit ? account.creditLimit.toFixed(2) : "");
+    setEditingAccountDescription(account.description || "");
+  };
+
+  const handleUpdateAccount = () => {
+    if (!editingAccountId) return;
+
+    onUpdateAccount(editingAccountId, {
+      name: editingAccountName,
+      type: editingAccountType,
+      balance: Number.parseFloat(editingAccountBalance),
+      creditLimit: editingAccountType === "credit" && editingCreditLimit ? Number.parseFloat(editingCreditLimit) : undefined,
+      description: editingAccountDescription,
+    });
+
+    // Close the dialog
+    setEditingAccountId(null);
+  };
+
+  const handleCancelEdit = () => {
+      setEditingAccountId(null)
+  }
+
   return (
     <div className="space-y-8">
       {/* Quick Balance Overview */}
@@ -112,14 +161,106 @@ export function BankAccountManagement({
                 <h3 className="font-semibold">{account.name}</h3>
                 <p className="text-sm text-muted-foreground">{accountTypes.find(t => t.value === account.type)?.label}</p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 hover:text-destructive"
-                onClick={() => onDeleteAccount(account.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              {/* Edit and Delete Buttons */}
+              <div className="flex gap-2">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:bg-accent"
+                      onClick={() => handleEditAccount(account)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Edit Account</DialogTitle>
+                      <DialogDescription>
+                        Make changes to your account here. Click save when you're done.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="name" className="text-right">
+                          Name
+                        </Label>
+                        <Input
+                          id="name"
+                          value={editingAccountName}
+                          onChange={(e) => setEditingAccountName(e.target.value)}
+                          className="col-span-3"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="username" className="text-right">
+                          Type
+                        </Label>
+                        <Select value={editingAccountType} onValueChange={(value: BankAccount["type"]) => setEditingAccountType(value)}>
+                            <SelectTrigger className="col-span-3">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {accountTypes.map((type) => (
+                                    <SelectItem key={type.value} value={type.value}>
+                                        {type.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="balance" className="text-right">
+                          Balance
+                        </Label>
+                        <Input
+                          id="balance"
+                          value={editingAccountBalance}
+                          onChange={(e) => setEditingAccountBalance(e.target.value)}
+                          className="col-span-3"
+                        />
+                      </div>
+                        {editingAccountType === "credit" && (
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="creditLimit" className="text-right">
+                                    Credit Limit
+                                </Label>
+                                <Input
+                                    id="creditLimit"
+                                    value={editingCreditLimit}
+                                    onChange={(e) => setEditingCreditLimit(e.target.value)}
+                                    className="col-span-3"
+                                />
+                            </div>
+                        )}
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="description" className="text-right">
+                          Description
+                        </Label>
+                        <Input
+                          id="description"
+                          value={editingAccountDescription}
+                          onChange={(e) => setEditingAccountDescription(e.target.value)}
+                          className="col-span-3"
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
+                      <Button type="submit" onClick={handleUpdateAccount}>Save changes</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 hover:text-destructive"
+                  onClick={() => onDeleteAccount(account.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <p className={cn(
               "text-2xl font-bold",
